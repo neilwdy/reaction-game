@@ -262,13 +262,17 @@
                     <div class="stat-label">Best Time</div>
                     <div class="stat-value best" id="best">-</div>
                 </div>
+                <div class="stat-item">
+                    <div class="stat-label">Performance</div>
+                    <div class="stat-value" id="rating" style="font-size: 1.25rem;">-</div>
+                </div>
             </div>
 
             <div class="canvas-container">
                 <canvas id="gameCanvas"></canvas>
                 <div class="game-status" id="gameStatus">
                     <div class="status-text ready">Ready to Start</div>
-                    <div class="status-subtext">Click the button to begin</div>
+                    <div class="status-subtext">Click here or the button to begin</div>
                 </div>
             </div>
 
@@ -283,7 +287,7 @@
         <div class="instructions">
             <h2>📖 How to Play</h2>
             <ol>
-                <li>Click <strong>Start Game</strong> to begin</li>
+                <li>Click <strong>Start Game</strong> or <strong>click the 3D object</strong> to begin</li>
                 <li>Watch the 3D scene - it will change after a random delay (1-5 seconds)</li>
                 <li>Click anywhere on the canvas as soon as you see the change</li>
                 <li>Your reaction time will be displayed immediately</li>
@@ -377,58 +381,132 @@
             createIdleShapes() {
                 this.clearShapes();
                 
-                const geometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
-                const material = new THREE.MeshPhongMaterial({ 
+                // Complex nested geometry structure
+                const group = new THREE.Group();
+                
+                // Outer torus
+                const torusGeom = new THREE.TorusGeometry(1.5, 0.2, 16, 100);
+                const torusMat = new THREE.MeshPhongMaterial({ 
                     color: 0x3B82F6,
-                    shininess: 100
+                    shininess: 100,
+                    transparent: true,
+                    opacity: 0.8
                 });
-                const shape = new THREE.Mesh(geometry, material);
-                this.scene.add(shape);
-                this.shapes.push({ mesh: shape, rotationSpeed: 0.01 });
+                const torus = new THREE.Mesh(torusGeom, torusMat);
+                group.add(torus);
+                
+                // Inner dodecahedron
+                const dodecaGeom = new THREE.DodecahedronGeometry(0.8);
+                const dodecaMat = new THREE.MeshPhongMaterial({ 
+                    color: 0x8B5CF6,
+                    shininess: 120,
+                    wireframe: false
+                });
+                const dodeca = new THREE.Mesh(dodecaGeom, dodecaMat);
+                group.add(dodeca);
+                
+                // Orbiting small spheres
+                for (let i = 0; i < 8; i++) {
+                    const sphereGeom = new THREE.SphereGeometry(0.15, 16, 16);
+                    const sphereMat = new THREE.MeshPhongMaterial({ 
+                        color: 0x10B981,
+                        shininess: 100
+                    });
+                    const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+                    const angle = (i / 8) * Math.PI * 2;
+                    sphere.position.x = Math.cos(angle) * 2;
+                    sphere.position.y = Math.sin(angle) * 2;
+                    group.add(sphere);
+                }
+                
+                this.scene.add(group);
+                this.shapes.push({ 
+                    mesh: group, 
+                    rotationSpeed: 0.01,
+                    children: group.children 
+                });
             }
 
             createWaitingShapes() {
                 this.clearShapes();
                 
-                const geometry = new THREE.IcosahedronGeometry(1.5, 0);
-                const material = new THREE.MeshPhongMaterial({ 
+                // Complex layered structure
+                const group = new THREE.Group();
+                
+                // Outer wireframe sphere
+                const sphereGeom = new THREE.IcosahedronGeometry(2, 1);
+                const sphereMat = new THREE.MeshPhongMaterial({ 
+                    color: 0xF59E0B,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+                group.add(sphere);
+                
+                // Middle octahedron
+                const octaGeom = new THREE.OctahedronGeometry(1.2);
+                const octaMat = new THREE.MeshPhongMaterial({ 
                     color: 0xF59E0B,
                     shininess: 80
                 });
-                const shape = new THREE.Mesh(geometry, material);
-                this.scene.add(shape);
-                this.shapes.push({ mesh: shape, rotationSpeed: 0.02 });
+                const octa = new THREE.Mesh(octaGeom, octaMat);
+                group.add(octa);
+                
+                // Inner tetrahedron
+                const tetraGeom = new THREE.TetrahedronGeometry(0.7);
+                const tetraMat = new THREE.MeshPhongMaterial({ 
+                    color: 0xFBBF24,
+                    shininess: 100
+                });
+                const tetra = new THREE.Mesh(tetraGeom, tetraMat);
+                group.add(tetra);
+                
+                this.scene.add(group);
+                this.shapes.push({ mesh: group, rotationSpeed: 0.02 });
             }
 
             createReadyShapes() {
                 this.clearShapes();
                 
-                // Multiple geometric shapes explosion
-                const colors = [0x10B981, 0x3B82F6, 0x8B5CF6];
-                const geometries = [
-                    new THREE.OctahedronGeometry(0.5),
-                    new THREE.TetrahedronGeometry(0.5),
-                    new THREE.DodecahedronGeometry(0.5)
-                ];
+                // Explosive complex arrangement
+                const colors = [0x10B981, 0x3B82F6, 0x8B5CF6, 0xEC4899];
                 
-                for (let i = 0; i < 6; i++) {
-                    const geometry = geometries[i % geometries.length];
-                    const material = new THREE.MeshPhongMaterial({ 
+                // Create multiple complex groups
+                for (let i = 0; i < 8; i++) {
+                    const group = new THREE.Group();
+                    
+                    // Core shape
+                    const coreGeom = new THREE.DodecahedronGeometry(0.4);
+                    const coreMat = new THREE.MeshPhongMaterial({ 
                         color: colors[i % colors.length],
                         shininess: 100
                     });
-                    const shape = new THREE.Mesh(geometry, material);
+                    const core = new THREE.Mesh(coreGeom, coreMat);
+                    group.add(core);
                     
-                    const angle = (i / 6) * Math.PI * 2;
-                    const radius = 2;
-                    shape.position.x = Math.cos(angle) * radius;
-                    shape.position.y = Math.sin(angle) * radius;
+                    // Surrounding ring
+                    const ringGeom = new THREE.TorusGeometry(0.6, 0.1, 8, 16);
+                    const ringMat = new THREE.MeshPhongMaterial({ 
+                        color: colors[(i + 1) % colors.length],
+                        transparent: true,
+                        opacity: 0.7
+                    });
+                    const ring = new THREE.Mesh(ringGeom, ringMat);
+                    ring.rotation.x = Math.PI / 2;
+                    group.add(ring);
                     
-                    this.scene.add(shape);
+                    const angle = (i / 8) * Math.PI * 2;
+                    const radius = 2.5;
+                    group.position.x = Math.cos(angle) * radius;
+                    group.position.y = Math.sin(angle) * radius;
+                    
+                    this.scene.add(group);
                     this.shapes.push({ 
-                        mesh: shape, 
+                        mesh: group, 
                         rotationSpeed: 0.03 + Math.random() * 0.02,
-                        orbitSpeed: 0.02
+                        orbitSpeed: 0.02,
+                        orbitAngle: angle
                     });
                 }
             }
@@ -436,8 +514,30 @@
             clearShapes() {
                 this.shapes.forEach(shape => {
                     this.scene.remove(shape.mesh);
-                    shape.mesh.geometry.dispose();
-                    shape.mesh.material.dispose();
+                    
+                    // Handle groups with multiple children
+                    if (shape.mesh.type === 'Group') {
+                        shape.mesh.children.forEach(child => {
+                            if (child.geometry) child.geometry.dispose();
+                            if (child.material) {
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(mat => mat.dispose());
+                                } else {
+                                    child.material.dispose();
+                                }
+                            }
+                        });
+                    } else {
+                        // Handle single meshes
+                        if (shape.mesh.geometry) shape.mesh.geometry.dispose();
+                        if (shape.mesh.material) {
+                            if (Array.isArray(shape.mesh.material)) {
+                                shape.mesh.material.forEach(mat => mat.dispose());
+                            } else {
+                                shape.mesh.material.dispose();
+                            }
+                        }
+                    }
                 });
                 this.shapes = [];
             }
@@ -452,10 +552,22 @@
                     
                     if (shape.orbitSpeed) {
                         const time = Date.now() * 0.001;
-                        const angle = (idx / this.shapes.length) * Math.PI * 2 + time * shape.orbitSpeed;
-                        const radius = 2;
+                        const angle = shape.orbitAngle + time * shape.orbitSpeed;
+                        const radius = 2.5;
                         shape.mesh.position.x = Math.cos(angle) * radius;
                         shape.mesh.position.y = Math.sin(angle) * radius;
+                    }
+                    
+                    // Animate nested children in idle state
+                    if (shape.children) {
+                        shape.children.forEach((child, childIdx) => {
+                            if (child.geometry.type === 'SphereGeometry') {
+                                const time = Date.now() * 0.001;
+                                const angle = (childIdx / 8) * Math.PI * 2 + time * 0.5;
+                                child.position.x = Math.cos(angle) * 2;
+                                child.position.y = Math.sin(angle) * 2;
+                            }
+                        });
                     }
                 });
                 
@@ -488,7 +600,10 @@
             }
 
             handleCanvasClick() {
-                if (this.state === GameState.WAITING) {
+                if (this.state === GameState.IDLE) {
+                    // Start the game by clicking the canvas
+                    this.startGame();
+                } else if (this.state === GameState.WAITING) {
                     // False start
                     this.handleFalseStart();
                 } else if (this.state === GameState.READY) {
@@ -499,10 +614,23 @@
 
             handleFalseStart() {
                 clearTimeout(this.timeoutId);
-                this.state = GameState.IDLE;
+                this.state = GameState.COMPLETE;
                 this.showError('⚠️ False Start! Wait for the visual change before clicking.');
+                
+                // Show false start message on canvas
+                const statusDiv = document.getElementById('gameStatus');
+                statusDiv.innerHTML = `
+                    <div class="status-text error">Too Early!</div>
+                    <div class="status-subtext" style="color: #EF4444; font-weight: 600;">Wait for the shapes to change</div>
+                `;
+                
                 this.createIdleShapes();
-                this.updateUI();
+                
+                // Return to idle after showing message
+                setTimeout(() => {
+                    this.state = GameState.IDLE;
+                    this.updateUI();
+                }, 2000);
             }
 
             handleReaction() {
@@ -523,23 +651,39 @@
                 }, 2000);
             }
 
+            getPerformanceRating(time) {
+                // Performance benchmarks based on reaction time research
+                if (time < 150) return { text: '🚀 Superhuman', color: '#EC4899' };
+                if (time < 200) return { text: '⚡ Excellent', color: '#8B5CF6' };
+                if (time < 250) return { text: '🎯 Great', color: '#10B981' };
+                if (time < 300) return { text: '👍 Good', color: '#3B82F6' };
+                if (time < 350) return { text: '✓ Average', color: '#F59E0B' };
+                return { text: '🐌 Slow', color: '#EF4444' };
+            }
+
             displayResult(time) {
                 const statusDiv = document.getElementById('gameStatus');
                 const msTime = Math.round(time);
+                const rating = this.getPerformanceRating(time);
                 
                 statusDiv.innerHTML = `
                     <div class="status-text react">${msTime} ms</div>
-                    <div class="status-subtext">Great reaction!</div>
+                    <div class="status-subtext" style="color: ${rating.color}; font-weight: 600; font-size: 1.1rem;">${rating.text}</div>
                 `;
             }
 
             updateStats() {
                 const avg = this.times.reduce((a, b) => a + b, 0) / this.times.length;
                 const best = Math.min(...this.times);
+                const avgRating = this.getPerformanceRating(avg);
                 
                 document.getElementById('attempts').textContent = this.attempts;
                 document.getElementById('average').textContent = `${Math.round(avg)} ms`;
                 document.getElementById('best').textContent = `${Math.round(best)} ms`;
+                
+                const ratingEl = document.getElementById('rating');
+                ratingEl.textContent = avgRating.text;
+                ratingEl.style.color = avgRating.color;
             }
 
             resetStats() {
@@ -554,6 +698,8 @@
                 document.getElementById('attempts').textContent = '0';
                 document.getElementById('average').textContent = '-';
                 document.getElementById('best').textContent = '-';
+                document.getElementById('rating').textContent = '-';
+                document.getElementById('rating').style.color = '#3B82F6';
                 
                 this.hideError();
             }
@@ -566,7 +712,7 @@
                     case GameState.IDLE:
                         statusDiv.innerHTML = `
                             <div class="status-text ready">Ready to Start</div>
-                            <div class="status-subtext">Click the button to begin</div>
+                            <div class="status-subtext">Click here or the button to begin</div>
                         `;
                         startBtn.disabled = false;
                         startBtn.textContent = 'Start Game';
